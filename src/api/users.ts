@@ -1,5 +1,10 @@
 import type { User, UsersResponse } from '../types/user'
-import { fetchWithTimeout, withTimeout, REQUEST_TIMEOUT_MS } from './fetchWithTimeout'
+import {
+  fetchWithTimeoutAndRetry,
+  withTimeout,
+  REQUEST_TIMEOUT_MS,
+  RETRY_COUNT,
+} from './fetchWithTimeout'
 import { API_BASE_URL, MAX_USERS_FOR_CLIENT_FILTER } from '../constants/config'
 import { MESSAGES } from '../constants/messages'
 
@@ -88,7 +93,7 @@ async function fetchAllUsers(signal?: AbortSignal): Promise<User[]> {
   const url = new URL(API_BASE_URL)
   url.searchParams.set('limit', String(MAX_USERS_FOR_CLIENT_FILTER))
   url.searchParams.set('skip', '0')
-  const res = await fetchWithTimeout(url.toString(), { signal })
+  const res = await fetchWithTimeoutAndRetry(url.toString(), { signal })
   if (!res.ok) throw new Error(MESSAGES.LOAD_ERROR(res.status, res.statusText))
   const data = await res.json()
   return data.users ?? []
@@ -123,7 +128,7 @@ async function doFetchUsers(params: FetchUsersParams): Promise<UsersResponse> {
     url.searchParams.set('sortBy', sortBy)
     url.searchParams.set('order', order)
   }
-  const res = await fetchWithTimeout(url.toString(), { signal })
+  const res = await fetchWithTimeoutAndRetry(url.toString(), { signal })
   if (!res.ok) throw new Error(MESSAGES.LOAD_ERROR(res.status, res.statusText))
   const data = await res.json()
   if (sortBy === 'maidenName' && order && data.users?.length) {
@@ -143,11 +148,12 @@ async function doFetchUsers(params: FetchUsersParams): Promise<UsersResponse> {
 }
 
 export async function fetchUsers(params: FetchUsersParams): Promise<UsersResponse> {
-  return withTimeout(doFetchUsers(params), REQUEST_TIMEOUT_MS, MESSAGES.TIMEOUT)
+  const maxWaitMs = (1 + RETRY_COUNT) * REQUEST_TIMEOUT_MS * 2
+  return withTimeout(doFetchUsers(params), maxWaitMs, MESSAGES.TIMEOUT)
 }
 
 export async function fetchUserById(id: number, signal?: AbortSignal): Promise<User> {
-  const res = await fetchWithTimeout(`${API_BASE_URL}/${id}`, { signal })
+  const res = await fetchWithTimeoutAndRetry(`${API_BASE_URL}/${id}`, { signal })
   if (!res.ok) throw new Error(MESSAGES.LOAD_ERROR(res.status, res.statusText))
   return res.json()
 }

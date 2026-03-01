@@ -9,20 +9,65 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { useTheme } from './contexts/ThemeContext'
 import type { User } from './types/user'
 import type { SortColumn, SortState } from './types/sort'
-import { SORT_STATES } from './types/sort'
+import { SORT_STATES, SORT_COLUMNS } from './types/sort'
 import { DEFAULT_COLUMN_WIDTHS, MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH, PAGE_SIZE } from './constants/layout'
-import { DEBOUNCE_MS, SLOW_HINT_DELAY_MS } from './constants/config'
+import { DEBOUNCE_MS, SLOW_HINT_DELAY_MS, ROSTER_STORAGE_KEY } from './constants/config'
 import { MESSAGES } from './constants/messages'
+
+function readStoredState(): {
+  filters: Record<string, string>
+  columnWidths: Record<string, number>
+  page: number
+  sortColumn: SortColumn | null
+  sortState: SortState
+} | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(ROSTER_STORAGE_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw) as Record<string, unknown>
+    const columnWidths =
+      data.columnWidths && typeof data.columnWidths === 'object'
+        ? { ...DEFAULT_COLUMN_WIDTHS, ...data.columnWidths }
+        : DEFAULT_COLUMN_WIDTHS
+    const page = typeof data.page === 'number' && data.page >= 1 ? data.page : 1
+    const sortColumn =
+      typeof data.sortColumn === 'string' && (SORT_COLUMNS as readonly string[]).includes(data.sortColumn)
+        ? (data.sortColumn as SortColumn)
+        : null
+    const sortState =
+      typeof data.sortState === 'string' && (SORT_STATES as readonly string[]).includes(data.sortState)
+        ? (data.sortState as SortState)
+        : 'none'
+    const filters =
+      data.filters && typeof data.filters === 'object' && !Array.isArray(data.filters)
+        ? Object.fromEntries(
+            Object.entries(data.filters).filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+          )
+        : {}
+    return {
+      filters,
+      columnWidths,
+      page,
+      sortColumn,
+      sortState,
+    }
+  } catch {
+    return null
+  }
+}
 
 function App() {
   const { theme, toggleTheme } = useTheme()
-  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
-  const [sortState, setSortState] = useState<SortState>('none')
-  const [filters, setFilters] = useState<Record<string, string>>({})
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(() => readStoredState()?.sortColumn ?? null)
+  const [sortState, setSortState] = useState<SortState>(() => readStoredState()?.sortState ?? 'none')
+  const [filters, setFilters] = useState<Record<string, string>>(() => readStoredState()?.filters ?? {})
   const debouncedFilters = useDebounce(filters, DEBOUNCE_MS)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(() => readStoredState()?.page ?? 1)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [columnWidths, setColumnWidths] = useState(DEFAULT_COLUMN_WIDTHS)
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(
+    () => readStoredState()?.columnWidths ?? DEFAULT_COLUMN_WIDTHS
+  )
 
   const sortParams = useMemo(() => {
     if (!sortColumn || sortState === 'none') return {}
@@ -77,6 +122,23 @@ function App() {
     setShowSlowHint(false)
   }, [loading])
 
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        ROSTER_STORAGE_KEY,
+        JSON.stringify({
+          filters,
+          columnWidths,
+          page,
+          sortColumn,
+          sortState,
+        })
+      )
+    } catch {
+      /* ignore */
+    }
+  }, [filters, columnWidths, page, sortColumn, sortState])
+
   return (
     <ErrorBoundary>
       <div className="app">
@@ -84,13 +146,13 @@ function App() {
           <div className="header__top">
             <div className="header__brand">
               <img
-                src="/usertable_logo_exact.svg"
+                src={`${import.meta.env.BASE_URL}roster.svg`}
                 alt=""
                 className="header__logo"
                 width="40"
                 height="36"
               />
-              <h1>UserTable</h1>
+              <h1>Roster</h1>
             </div>
             <button
               type="button"
@@ -138,6 +200,9 @@ function App() {
           {loading && showSlowHint && (
             <div className="slow-hint">
               <span>{MESSAGES.SLOW_HINT}</span>
+              <button type="button" className="slow-hint__btn" onClick={() => window.location.reload()}>
+                {MESSAGES.REFRESH_PAGE}
+              </button>
             </div>
           )}
 
