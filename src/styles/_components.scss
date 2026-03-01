@@ -101,6 +101,16 @@
   color: var(--text-muted);
 }
 
+// Скрыть стрелки спиннера у полей «Возраст от/до»
+.filter-input--number {
+  -moz-appearance: textfield;
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
 // ─── Table ─────────────────────────────────────────────────────
 .main {
   position: relative;
@@ -165,13 +175,26 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 6px;
+  width: 8px;
   height: 100%;
   cursor: col-resize;
 
-  &:hover, &:active {
-    background: linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
-    opacity: 0.3;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+  }
+
+  &:hover::after,
+  &:active::after {
+    background: var(--accent);
+    width: 3px;
   }
 }
 
@@ -192,6 +215,13 @@
 .users-table__td {
   font-size: 0.9rem;
   white-space: nowrap;
+}
+
+.users-table__empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: v.$spacing-2xl !important;
 }
 
 // ─── Pagination ─────────────────────────────────────────────────
@@ -393,6 +423,37 @@
 @keyframes loading-pulse {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(233%); }
+}
+
+.slow-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: v.$spacing-md;
+  padding: v.$spacing-md v.$spacing-lg;
+  margin-top: v.$spacing-md;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.slow-hint__btn {
+  padding: v.$spacing-xs v.$spacing-md;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
 }
 
 // ─── Error ──────────────────────────────────────────────────────
