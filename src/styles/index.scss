@@ -1,0 +1,8 @@
+// 1. Normalize — browser consistency
+// 2. Variables + themes — design tokens
+// 3. Base — html, body
+// 4. Components — layout, table, modal, etc.
+@use 'normalize';
+@use 'variables';
+@use 'base';
+@use 'components';

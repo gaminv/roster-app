@@ -1,0 +1,58 @@
+// Design tokens — variables used across components
+// Themes — CSS custom properties for light/dark (runtime switch)
+
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 0.75rem;
+$spacing-lg: 1rem;
+$spacing-xl: 1.5rem;
+$spacing-2xl: 2rem;
+
+$radius-sm: 8px;
+$radius-md: 12px;
+
+$font-size-xs: 0.8rem;
+$font-size-sm: 0.85rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.25rem;
+$font-size-xl: 2rem;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$line-height: 1.5;
+
+$app-max-width: 1400px;
+$modal-max-width: 480px;
+$avatar-size: 100px;
+$transition: 0.2s ease;
+$z-modal: 1000;
+
+// Theme — CSS vars for runtime light/dark
+:root,
+[data-theme='dark'] {
+  --bg: #0d1117;
+  --bg-elevated: #161b22;
+  --bg-hover: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  --accent-hover: #79b8ff;
+  --error: #f85149;
+  --radius: #{$radius-md};
+  --radius-sm: #{$radius-sm};
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --font-sans: 'Outfit', system-ui, sans-serif;
+}
+
+[data-theme='light'] {
+  --bg: #f6f8fa;
+  --bg-elevated: #fff;
+  --bg-hover: #f0f2f5;
+  --border: #d0d7de;
+  --text: #1f2328;
+  --text-muted: #656d76;
+  --accent: #0969da;
+  --accent-hover: #0550ae;
+  --error: #cf222e;
+  --shadow: 0 8px 24px rgba(31, 35, 40, 0.12);
+}
