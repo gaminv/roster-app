@@ -54,6 +54,12 @@
   margin-bottom: v.$spacing-xl;
 }
 
+.filters__hint {
+  font-size: v.$font-size-xs;
+  color: var(--text-muted);
+  margin: 0 0 v.$spacing-sm 0;
+}
+
 .filters__row {
   display: flex;
   flex-wrap: wrap;

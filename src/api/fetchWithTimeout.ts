@@ -27,7 +27,9 @@ export async function fetchWithTimeout(
   } catch (err) {
     cleanup()
     if (timedOut) {
-      throw new Error('Превышено время ожидания. Проверьте интернет и повторите.')
+      throw new Error(
+        'Превышено время ожидания. При медленном доступе к API включите VPN. Данные из кэша сохранены.'
+      )
     }
     throw err
   }
