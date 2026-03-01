@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useUsers } from './hooks/useUsers'
 import { useDebounce } from './hooks/useDebounce'
 import { UsersTable } from './components/UsersTable'
@@ -72,6 +72,16 @@ function App() {
     filters: debouncedFilters,
   })
 
+  const [showSlowHint, setShowSlowHint] = useState(false)
+
+  useEffect(() => {
+    if (loading) {
+      const t = setTimeout(() => setShowSlowHint(true), 6000)
+      return () => clearTimeout(t)
+    }
+    setShowSlowHint(false)
+  }, [loading])
+
   return (
     <ErrorBoundary>
       <div className="app">
@@ -118,6 +128,15 @@ function App() {
           {loading && (
             <div className="loading-bar" aria-hidden="true">
               <div className="loading-bar__fill" />
+            </div>
+          )}
+
+          {loading && showSlowHint && (
+            <div className="slow-hint">
+              <span>Загрузка идёт дольше обычного. Включите VPN или обновите страницу.</span>
+              <button type="button" className="slow-hint__btn" onClick={() => window.location.reload()}>
+                Обновить страницу
+              </button>
             </div>
           )}
 

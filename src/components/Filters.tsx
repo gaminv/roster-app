@@ -13,7 +13,7 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
   return (
     <div className="filters">
       <p className="filters__hint">
-        При нескольких заполненных полях используется один фильтр по приоритету: ФИО → возраст (от/до) → пол → телефон. Пол — точное совпадение (Мужской/Женский). Телефон и диапазон возраста ищут по части значения.
+        Учитываются все заполненные поля: поиск по имени, фамилии и отчеству, возраст (от/до), пол, телефон. Пробелы и дефисы в номере не учитываются.
       </p>
       <div className="filters__row">
         <div className="filter-group">
@@ -21,7 +21,7 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
           <input
             id="filter-name"
             type="text"
-            placeholder="Поиск по имени, фамилии..."
+            placeholder="Имя, фамилия или отчество..."
             value={filters.search ?? ''}
             onChange={(e) => onFilterChange('search', e.target.value)}
             className="filter-input"
@@ -37,7 +37,7 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
             max={120}
             value={filters.ageMin ?? ''}
             onChange={(e) => onFilterChange('ageMin', e.target.value)}
-            className="filter-input"
+            className="filter-input filter-input--number"
           />
         </div>
         <div className="filter-group">
@@ -50,7 +50,7 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
             max={120}
             value={filters.ageMax ?? ''}
             onChange={(e) => onFilterChange('ageMax', e.target.value)}
-            className="filter-input"
+            className="filter-input filter-input--number"
           />
         </div>
         <div className="filter-group">
@@ -73,7 +73,7 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
           <input
             id="filter-phone"
             type="text"
-            placeholder="Часть номера, например +4"
+            placeholder="Введите номер"
             value={filters.phone ?? ''}
             onChange={(e) => onFilterChange('phone', e.target.value)}
             className="filter-input"

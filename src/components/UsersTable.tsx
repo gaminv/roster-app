@@ -123,27 +123,35 @@ export function UsersTable({
         </tr>
       </thead>
       <tbody>
-        {users.map((user) => (
-          <tr
-            key={user.id}
-            className="users-table__row"
-            onClick={() => onRowClick(user)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                onRowClick(user)
-              }
-            }}
-          >
-            {COLUMNS.map((col) => (
-              <td key={col.key} className="users-table__td">
-                {getCellValue(user, col.key)}
-              </td>
-            ))}
+        {users.length === 0 ? (
+          <tr>
+            <td colSpan={COLUMNS.length} className="users-table__empty">
+              Нет данных
+            </td>
           </tr>
-        ))}
+        ) : (
+          users.map((user) => (
+            <tr
+              key={user.id}
+              className="users-table__row"
+              onClick={() => onRowClick(user)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onRowClick(user)
+                }
+              }}
+            >
+              {COLUMNS.map((col) => (
+                <td key={col.key} className="users-table__td">
+                  {getCellValue(user, col.key)}
+                </td>
+              ))}
+            </tr>
+          ))
+        )}
       </tbody>
     </table>
   )
