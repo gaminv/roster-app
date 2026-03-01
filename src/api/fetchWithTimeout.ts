@@ -1,3 +1,5 @@
+import { MESSAGES } from '../constants/messages'
+
 export const REQUEST_TIMEOUT_MS = 10000
 
 export async function fetchWithTimeout(
@@ -26,11 +28,7 @@ export async function fetchWithTimeout(
     return res
   } catch (err) {
     cleanup()
-    if (timedOut) {
-      throw new Error(
-        'Превышено время ожидания. При медленном доступе к API включите VPN. Данные из кэша сохранены.'
-      )
-    }
+    if (timedOut) throw new Error(MESSAGES.TIMEOUT)
     throw err
   }
 }

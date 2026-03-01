@@ -2,6 +2,7 @@
 
 // ─── Layout ───────────────────────────────────────────────────
 .app {
+  box-sizing: border-box;
   max-width: v.$app-max-width;
   margin: 0 auto;
   padding: v.$spacing-2xl;
@@ -19,9 +20,20 @@
   gap: v.$spacing-lg;
 }
 
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: v.$spacing-sm;
+}
+
+.header__logo {
+  display: block;
+  flex-shrink: 0;
+}
+
 .theme-toggle {
-  width: 44px;
-  height: 44px;
+  width: v.$theme-toggle-size;
+  height: v.$theme-toggle-size;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
@@ -87,8 +99,8 @@
   background: var(--bg-elevated);
   color: var(--text);
   font-family: inherit;
-  font-size: 0.9rem;
-  min-width: 140px;
+  font-size: v.$input-font-size;
+  min-width: v.$filter-input-min-width;
   transition: border-color v.$transition;
 
   &:focus {
@@ -213,14 +225,14 @@
 }
 
 .users-table__td {
-  font-size: 0.9rem;
+  font-size: v.$input-font-size;
   white-space: nowrap;
 }
 
 .users-table__empty {
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: v.$input-font-size;
   padding: v.$spacing-2xl !important;
 }
 
@@ -235,7 +247,7 @@
 }
 
 .pagination__info {
-  font-size: 0.9rem;
+  font-size: v.$input-font-size;
   color: var(--text-muted);
 }
 
@@ -269,7 +281,7 @@
 }
 
 .pagination__page {
-  font-size: 0.9rem;
+  font-size: v.$input-font-size;
   padding: 0 v.$spacing-sm;
   color: var(--text-muted);
 }
@@ -374,7 +386,7 @@
     margin: 0;
     font-weight: v.$font-weight-medium;
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: v.$input-font-size;
   }
 
   dd {
@@ -437,7 +449,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: v.$input-font-size;
 }
 
 .slow-hint__btn {
@@ -448,7 +460,7 @@
   color: var(--accent);
   font: inherit;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background v.$transition, color v.$transition;
 
   &:hover {
     background: var(--accent);
@@ -479,7 +491,7 @@
     color: var(--error);
     font-family: inherit;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: v.$input-font-size;
 
     &:hover {
       background: rgba(248, 81, 73, 0.2);
@@ -519,5 +531,61 @@
     &:hover {
       background: rgba(88, 166, 255, 0.15);
     }
+  }
+}
+
+// ─── Responsive ─────────────────────────────────────────────────
+@media (max-width: v.$breakpoint-md) {
+  .app {
+    padding: v.$spacing-lg;
+  }
+
+  .header h1 {
+    font-size: v.$font-size-lg;
+  }
+
+  .filters__row {
+    gap: v.$spacing-md;
+  }
+
+  .filter-group .filter-input,
+  .filter-group .filter-select {
+    min-width: 120px;
+  }
+
+  .users-table__th,
+  .users-table__td {
+    padding: v.$spacing-sm v.$spacing-md;
+    font-size: v.$font-size-sm;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: v.$spacing-sm;
+  }
+}
+
+@media (max-width: v.$breakpoint-sm) {
+  .app {
+    padding: v.$spacing-md;
+  }
+
+  .header__top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filters__hint {
+    font-size: 0.75rem;
+  }
+
+  .filter-group .filter-input,
+  .filter-group .filter-select {
+    min-width: 100%;
+  }
+
+  .pagination__controls {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }

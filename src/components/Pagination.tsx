@@ -1,3 +1,5 @@
+import { MESSAGES } from '../constants/messages'
+
 interface PaginationProps {
   currentPage: number
   totalItems: number
@@ -22,7 +24,7 @@ export function Pagination({
   return (
     <div className="pagination">
       <div className="pagination__info">
-        Показано {totalItems === 0 ? 0 : `${start}-${end}`} из {totalItems}
+        {MESSAGES.PAGINATION_SHOWN(totalItems === 0 ? 0 : start, totalItems === 0 ? 0 : end, totalItems)}
       </div>
       <div className="pagination__controls">
         <button
@@ -30,7 +32,7 @@ export function Pagination({
           className="pagination__btn"
           onClick={() => onPageChange(1)}
           disabled={!canPrev || loading}
-          aria-label="Первая страница"
+          aria-label={MESSAGES.PAGINATION_FIRST}
         >
           ««
         </button>
@@ -39,19 +41,19 @@ export function Pagination({
           className="pagination__btn"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={!canPrev || loading}
-          aria-label="Предыдущая страница"
+          aria-label={MESSAGES.PAGINATION_PREV}
         >
           ‹
         </button>
         <span className="pagination__page">
-          {currentPage} / {totalPages}
+          {MESSAGES.PAGINATION_PAGE(currentPage, totalPages)}
         </span>
         <button
           type="button"
           className="pagination__btn"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={!canNext || loading}
-          aria-label="Следующая страница"
+          aria-label={MESSAGES.PAGINATION_NEXT}
         >
           ›
         </button>
@@ -60,7 +62,7 @@ export function Pagination({
           className="pagination__btn"
           onClick={() => onPageChange(totalPages)}
           disabled={!canNext || loading}
-          aria-label="Последняя страница"
+          aria-label={MESSAGES.PAGINATION_LAST}
         >
           »»
         </button>

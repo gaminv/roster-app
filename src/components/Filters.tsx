@@ -1,3 +1,6 @@
+import { MESSAGES } from '../constants/messages'
+import { AGE_FILTER_MIN, AGE_FILTER_MAX } from '../constants/config'
+
 interface FiltersProps {
   filters: Record<string, string>
   onFilterChange: (key: string, value: string) => void
@@ -7,21 +10,19 @@ const GENDER_OPTIONS = [
   { value: '', label: 'Все' },
   { value: 'male', label: 'Мужской' },
   { value: 'female', label: 'Женский' },
-]
+] as const
 
 export function Filters({ filters, onFilterChange }: FiltersProps) {
   return (
     <div className="filters">
-      <p className="filters__hint">
-        Учитываются все заполненные поля: поиск по имени, фамилии и отчеству, возраст (от/до), пол, телефон. Пробелы и дефисы в номере не учитываются.
-      </p>
+      <p className="filters__hint">{MESSAGES.FILTER_HINT}</p>
       <div className="filters__row">
         <div className="filter-group">
           <label htmlFor="filter-name">ФИО</label>
           <input
             id="filter-name"
             type="text"
-            placeholder="Имя, фамилия или отчество..."
+            placeholder={MESSAGES.PLACEHOLDER_FIO}
             value={filters.search ?? ''}
             onChange={(e) => onFilterChange('search', e.target.value)}
             className="filter-input"
@@ -32,9 +33,9 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
           <input
             id="filter-age-min"
             type="number"
-            placeholder="18"
-            min={0}
-            max={120}
+            placeholder={MESSAGES.PLACEHOLDER_AGE_MIN}
+            min={AGE_FILTER_MIN}
+            max={AGE_FILTER_MAX}
             value={filters.ageMin ?? ''}
             onChange={(e) => onFilterChange('ageMin', e.target.value)}
             className="filter-input filter-input--number"
@@ -45,9 +46,9 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
           <input
             id="filter-age-max"
             type="number"
-            placeholder="99"
-            min={0}
-            max={120}
+            placeholder={MESSAGES.PLACEHOLDER_AGE_MAX}
+            min={AGE_FILTER_MIN}
+            max={AGE_FILTER_MAX}
             value={filters.ageMax ?? ''}
             onChange={(e) => onFilterChange('ageMax', e.target.value)}
             className="filter-input filter-input--number"
@@ -73,7 +74,7 @@ export function Filters({ filters, onFilterChange }: FiltersProps) {
           <input
             id="filter-phone"
             type="text"
-            placeholder="Введите номер"
+            placeholder={MESSAGES.PLACEHOLDER_PHONE}
             value={filters.phone ?? ''}
             onChange={(e) => onFilterChange('phone', e.target.value)}
             className="filter-input"

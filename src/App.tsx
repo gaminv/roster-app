@@ -8,34 +8,26 @@ import { Pagination } from './components/Pagination'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useTheme } from './contexts/ThemeContext'
 import type { User } from './types/user'
-import { DEFAULT_COLUMN_WIDTHS, MIN_COLUMN_WIDTH, PAGE_SIZE } from './constants/layout'
-
-const SORT_STATES = ['none', 'asc', 'desc'] as const
-export type SortState = (typeof SORT_STATES)[number]
-
-const COLUMN_KEYS = ['name', 'age', 'gender', 'phone'] as const
-export type SortColumn = (typeof COLUMN_KEYS)[number]
+import type { SortColumn, SortState } from './types/sort'
+import { SORT_STATES } from './types/sort'
+import { DEFAULT_COLUMN_WIDTHS, MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH, PAGE_SIZE } from './constants/layout'
+import { DEBOUNCE_MS, SLOW_HINT_DELAY_MS } from './constants/config'
+import { MESSAGES } from './constants/messages'
 
 function App() {
   const { theme, toggleTheme } = useTheme()
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
   const [sortState, setSortState] = useState<SortState>('none')
   const [filters, setFilters] = useState<Record<string, string>>({})
-  const debouncedFilters = useDebounce(filters, 400)
+  const debouncedFilters = useDebounce(filters, DEBOUNCE_MS)
   const [page, setPage] = useState(1)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [columnWidths, setColumnWidths] = useState(DEFAULT_COLUMN_WIDTHS)
 
   const sortParams = useMemo(() => {
     if (!sortColumn || sortState === 'none') return {}
-    const sortByMap: Record<SortColumn, string> = {
-      name: 'lastName',
-      age: 'age',
-      gender: 'gender',
-      phone: 'phone',
-    }
     return {
-      sortBy: sortByMap[sortColumn],
+      sortBy: sortColumn,
       order: sortState as 'asc' | 'desc',
     }
   }, [sortColumn, sortState])
@@ -44,8 +36,8 @@ function App() {
     (column: SortColumn) => {
       if (sortColumn === column) {
         setSortState((prev) => {
-          const next = SORT_STATES[(SORT_STATES.indexOf(prev) + 1) % SORT_STATES.length]
-          return next
+          const idx = SORT_STATES.indexOf(prev)
+          return SORT_STATES[(idx + 1) % SORT_STATES.length]
         })
       } else {
         setSortColumn(column)
@@ -62,7 +54,10 @@ function App() {
   }, [])
 
   const handleColumnResize = useCallback((columnKey: string, newWidth: number) => {
-    setColumnWidths((w) => ({ ...w, [columnKey]: Math.max(MIN_COLUMN_WIDTH, newWidth) }))
+    setColumnWidths((w) => ({
+      ...w,
+      [columnKey]: Math.max(MIN_COLUMN_WIDTH, Math.min(MAX_COLUMN_WIDTH, newWidth)),
+    }))
   }, [])
 
   const { users, total, loading, error, refetch } = useUsers({
@@ -76,7 +71,7 @@ function App() {
 
   useEffect(() => {
     if (loading) {
-      const t = setTimeout(() => setShowSlowHint(true), 6000)
+      const t = setTimeout(() => setShowSlowHint(true), SLOW_HINT_DELAY_MS)
       return () => clearTimeout(t)
     }
     setShowSlowHint(false)
@@ -87,7 +82,16 @@ function App() {
       <div className="app">
         <header className="header">
           <div className="header__top">
-            <h1>Пользователи</h1>
+            <div className="header__brand">
+              <img
+                src="/usertable_logo_exact.svg"
+                alt=""
+                className="header__logo"
+                width="40"
+                height="36"
+              />
+              <h1>UserTable</h1>
+            </div>
             <button
               type="button"
               className="theme-toggle"
@@ -98,7 +102,7 @@ function App() {
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
           </div>
-          <p className="subtitle">Управление и просмотр данных пользователей</p>
+          <p className="subtitle">Таблица пользователей — просмотр, сортировка и фильтрация</p>
         </header>
 
         <Filters filters={filters} onFilterChange={handleFilterChange} />
@@ -108,7 +112,7 @@ function App() {
             <div className="error-banner">
               <span>{error}</span>
               <button type="button" onClick={refetch}>
-                Повторить
+                {MESSAGES.RETRY}
               </button>
             </div>
           )}
@@ -133,10 +137,7 @@ function App() {
 
           {loading && showSlowHint && (
             <div className="slow-hint">
-              <span>Загрузка идёт дольше обычного. Включите VPN или обновите страницу.</span>
-              <button type="button" className="slow-hint__btn" onClick={() => window.location.reload()}>
-                Обновить страницу
-              </button>
+              <span>{MESSAGES.SLOW_HINT}</span>
             </div>
           )}
 
