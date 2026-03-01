@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { fetchUsers } from '../api/users'
 import type { User } from '../types/user'
+import { MESSAGES } from '../constants/messages'
 
 interface UseUsersParams {
   page: number
@@ -98,7 +99,7 @@ export function useUsers(params: UseUsersParams) {
       setTotal(entry.total)
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
-      setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных')
+      setError(err instanceof Error ? err.message : MESSAGES.UNKNOWN_ERROR)
       if (!cache.has(cacheKey)) {
         setUsers((prev) => (prev.length ? prev : []))
         setTotal((prev) => (prev > 0 ? prev : 0))

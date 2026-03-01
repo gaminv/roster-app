@@ -1,7 +1,20 @@
 import { useRef, useCallback } from 'react'
 import type { User } from '../types/user'
-import { MIN_COLUMN_WIDTH } from '../constants/layout'
-import type { SortColumn, SortState } from '../App'
+import type { SortColumn, SortState } from '../types/sort'
+import { MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH } from '../constants/layout'
+import {
+  TABLE_COLUMNS,
+  SORTABLE_COLUMNS,
+  DEFAULT_TABLE_COLUMN_WIDTH,
+  EMPTY_CELL,
+} from '../constants/table'
+import { MESSAGES } from '../constants/messages'
+
+const SORT_ICONS: Record<SortState, string> = {
+  none: '⇅',
+  asc: '↑',
+  desc: '↓',
+}
 
 interface UsersTableProps {
   users: User[]
@@ -13,38 +26,11 @@ interface UsersTableProps {
   onColumnResize: (columnKey: string, newWidth: number) => void
 }
 
-const COLUMNS: { key: string; label: string; sortable: boolean }[] = [
-  { key: 'lastName', label: 'Фамилия', sortable: true },
-  { key: 'firstName', label: 'Имя', sortable: true },
-  { key: 'maidenName', label: 'Отчество', sortable: true },
-  { key: 'age', label: 'Возраст', sortable: true },
-  { key: 'gender', label: 'Пол', sortable: true },
-  { key: 'phone', label: 'Телефон', sortable: true },
-  { key: 'email', label: 'Email', sortable: false },
-  { key: 'country', label: 'Страна', sortable: false },
-  { key: 'city', label: 'Город', sortable: false },
-]
-
-const SORT_LABEL_MAP: Record<string, SortColumn> = {
-  lastName: 'name',
-  firstName: 'name',
-  maidenName: 'name',
-  age: 'age',
-  gender: 'gender',
-  phone: 'phone',
-}
-
-const SORT_ICONS = {
-  none: '⇅',
-  asc: '↑',
-  desc: '↓',
-}
-
 function getCellValue(user: User, key: string): string {
-  if (key === 'country') return user.address?.country ?? '-'
-  if (key === 'city') return user.address?.city ?? '-'
+  if (key === 'country') return user.address?.country ?? EMPTY_CELL
+  if (key === 'city') return user.address?.city ?? EMPTY_CELL
   const v = (user as unknown as Record<string, unknown>)[key]
-  return v != null && v !== '' ? String(v) : '-'
+  return v != null && v !== '' ? String(v) : EMPTY_CELL
 }
 
 export function UsersTable({
@@ -68,13 +54,14 @@ export function UsersTable({
       e.preventDefault()
       e.stopPropagation()
       const startX = e.clientX
-      const startWidth = columnWidths[key] ?? 120
+      const startWidth = columnWidths[key] ?? DEFAULT_TABLE_COLUMN_WIDTH
 
       const onMove = (moveEvent: MouseEvent) => {
         const data = resizeRef.current
         if (!data) return
         const diff = moveEvent.clientX - data.startX
-        data.onResize(data.key, Math.max(MIN_COLUMN_WIDTH, data.startWidth + diff))
+        const next = Math.max(MIN_COLUMN_WIDTH, Math.min(MAX_COLUMN_WIDTH, data.startWidth + diff))
+        data.onResize(data.key, next)
       }
 
       const onUp = () => {
@@ -94,18 +81,22 @@ export function UsersTable({
     <table className="users-table">
       <thead>
         <tr>
-          {COLUMNS.map((col) => {
-            const sortCol = SORT_LABEL_MAP[col.key]
-            const isSortable = col.sortable && sortCol
-            const isActive = sortColumn === sortCol
+          {TABLE_COLUMNS.map((col) => {
+            const isSortable =
+              col.sortable && SORTABLE_COLUMNS.includes(col.key as SortColumn)
+            const isActive = sortColumn === col.key
             const icon = isActive ? SORT_ICONS[sortState] : SORT_ICONS.none
 
             return (
               <th
                 key={col.key}
                 className={`users-table__th ${isSortable ? 'users-table__th--sortable' : ''} ${isActive ? 'users-table__th--active' : ''}`}
-                style={{ width: columnWidths[col.key] ?? 120, minWidth: MIN_COLUMN_WIDTH }}
-                onClick={isSortable ? () => onHeaderClick(sortCol) : undefined}
+                style={{
+                  width: columnWidths[col.key] ?? DEFAULT_TABLE_COLUMN_WIDTH,
+                  minWidth: MIN_COLUMN_WIDTH,
+                  maxWidth: MAX_COLUMN_WIDTH,
+                }}
+                onClick={isSortable ? () => onHeaderClick(col.key as SortColumn) : undefined}
               >
                 <span className="users-table__th-content">
                   {col.label}
@@ -125,8 +116,8 @@ export function UsersTable({
       <tbody>
         {users.length === 0 ? (
           <tr>
-            <td colSpan={COLUMNS.length} className="users-table__empty">
-              Нет данных
+            <td colSpan={TABLE_COLUMNS.length} className="users-table__empty">
+              {MESSAGES.NO_DATA}
             </td>
           </tr>
         ) : (
@@ -144,7 +135,7 @@ export function UsersTable({
                 }
               }}
             >
-              {COLUMNS.map((col) => (
+              {TABLE_COLUMNS.map((col) => (
                 <td key={col.key} className="users-table__td">
                   {getCellValue(user, col.key)}
                 </td>

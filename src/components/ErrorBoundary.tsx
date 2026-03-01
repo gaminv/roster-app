@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react'
+import { MESSAGES } from '../constants/messages'
 
 interface Props {
   children: ReactNode
@@ -23,13 +24,13 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="error-boundary">
-          <h1>Произошла ошибка</h1>
-          <p>{this.state.error?.message ?? 'Неизвестная ошибка'}</p>
+          <h1>{MESSAGES.ERROR_BOUNDARY_TITLE}</h1>
+          <p>{this.state.error?.message ?? MESSAGES.ERROR_BOUNDARY_UNKNOWN}</p>
           <button
             type="button"
             onClick={() => this.setState({ hasError: false })}
           >
-            Попробовать снова
+            {MESSAGES.ERROR_BOUNDARY_RETRY}
           </button>
         </div>
       )

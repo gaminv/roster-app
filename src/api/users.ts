@@ -1,7 +1,7 @@
 import type { User, UsersResponse } from '../types/user'
 import { fetchWithTimeout, withTimeout, REQUEST_TIMEOUT_MS } from './fetchWithTimeout'
-
-const BASE_URL = 'https://dummyjson.com/users'
+import { API_BASE_URL, MAX_USERS_FOR_CLIENT_FILTER } from '../constants/config'
+import { MESSAGES } from '../constants/messages'
 
 export interface FetchUsersParams {
   page?: number
@@ -12,10 +12,9 @@ export interface FetchUsersParams {
   signal?: AbortSignal
 }
 
-const TIMEOUT_MSG =
-  'Превышено время ожидания. При медленном доступе к API включите VPN. Данные из кэша сохранены.'
-
-const MAX_USERS_FOR_CLIENT_FILTER = 200
+function isEmptyValue(v: unknown): boolean {
+  return v == null || v === '' || String(v).trim() === '-'
+}
 
 /** Normalize phone for comparison: remove spaces, dashes, parentheses; lowercase */
 function normalizePhone(s: string): string {
@@ -38,12 +37,14 @@ function filterUsersClientSide(
   const phoneFilter = filters.phone?.trim()
 
   if (searchQuery) {
-    const q = searchQuery.toLowerCase()
-    list = list.filter(
-      (u) =>
-        (u.firstName ?? '').toLowerCase().includes(q) ||
-        (u.lastName ?? '').toLowerCase().includes(q) ||
-        (u.maidenName ?? '').toLowerCase().includes(q)
+    const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean)
+    list = list.filter((u) =>
+      tokens.every(
+        (token) =>
+          (u.firstName ?? '').toLowerCase().includes(token) ||
+          (u.lastName ?? '').toLowerCase().includes(token) ||
+          (u.maidenName ?? '').toLowerCase().includes(token)
+      )
     )
   }
   if (ageMin) {
@@ -66,8 +67,16 @@ function filterUsersClientSide(
     list.sort((a, b) => {
       const av = a[sortBy as keyof User]
       const bv = b[sortBy as keyof User]
-      if (av == null) return 1
-      if (bv == null) return -1
+      if (sortBy === 'maidenName') {
+        const aEmpty = isEmptyValue(av)
+        const bEmpty = isEmptyValue(bv)
+        if (aEmpty && bEmpty) return 0
+        if (aEmpty) return order === 'asc' ? 1 : -1
+        if (bEmpty) return order === 'asc' ? -1 : 1
+      } else {
+        if (av == null) return 1
+        if (bv == null) return -1
+      }
       const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true })
       return order === 'asc' ? cmp : -cmp
     })
@@ -76,11 +85,11 @@ function filterUsersClientSide(
 }
 
 async function fetchAllUsers(signal?: AbortSignal): Promise<User[]> {
-  const url = new URL(BASE_URL)
+  const url = new URL(API_BASE_URL)
   url.searchParams.set('limit', String(MAX_USERS_FOR_CLIENT_FILTER))
   url.searchParams.set('skip', '0')
   const res = await fetchWithTimeout(url.toString(), { signal })
-  if (!res.ok) throw new Error(`Ошибка загрузки: ${res.status} ${res.statusText}`)
+  if (!res.ok) throw new Error(MESSAGES.LOAD_ERROR(res.status, res.statusText))
   const data = await res.json()
   return data.users ?? []
 }
@@ -95,7 +104,9 @@ async function doFetchUsers(params: FetchUsersParams): Promise<UsersResponse> {
   const phoneFilter = filters.phone?.trim()
   const genderFilter = filters.gender?.trim()
 
-  const hasAnyFilter = searchQuery || ageMin || ageMax || phoneFilter || genderFilter
+  const needsClientSort = sortBy === 'maidenName'
+  const hasAnyFilter =
+    searchQuery || ageMin || ageMax || phoneFilter || genderFilter || needsClientSort
 
   if (hasAnyFilter) {
     const all = await fetchAllUsers(signal)
@@ -105,27 +116,38 @@ async function doFetchUsers(params: FetchUsersParams): Promise<UsersResponse> {
     return { users, total, skip, limit }
   }
 
-  const url = new URL(BASE_URL)
+  const url = new URL(API_BASE_URL)
   url.searchParams.set('limit', String(limit))
   url.searchParams.set('skip', String(skip))
-  if (sortBy && order) {
+  if (sortBy && order && sortBy !== 'maidenName') {
     url.searchParams.set('sortBy', sortBy)
     url.searchParams.set('order', order)
   }
   const res = await fetchWithTimeout(url.toString(), { signal })
-  if (!res.ok) throw new Error(`Ошибка загрузки: ${res.status} ${res.statusText}`)
+  if (!res.ok) throw new Error(MESSAGES.LOAD_ERROR(res.status, res.statusText))
   const data = await res.json()
+  if (sortBy === 'maidenName' && order && data.users?.length) {
+    data.users.sort((a: User, b: User) => {
+      const av = a.maidenName
+      const bv = b.maidenName
+      const aEmpty = isEmptyValue(av)
+      const bEmpty = isEmptyValue(bv)
+      if (aEmpty && bEmpty) return 0
+      if (aEmpty) return order === 'asc' ? 1 : -1
+      if (bEmpty) return order === 'asc' ? -1 : 1
+      const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true })
+      return order === 'asc' ? cmp : -cmp
+    })
+  }
   return data
 }
 
 export async function fetchUsers(params: FetchUsersParams): Promise<UsersResponse> {
-  return withTimeout(doFetchUsers(params), REQUEST_TIMEOUT_MS, TIMEOUT_MSG)
+  return withTimeout(doFetchUsers(params), REQUEST_TIMEOUT_MS, MESSAGES.TIMEOUT)
 }
 
 export async function fetchUserById(id: number, signal?: AbortSignal): Promise<User> {
-  const res = await fetchWithTimeout(`${BASE_URL}/${id}`, { signal })
-  if (!res.ok) {
-    throw new Error(`Ошибка загрузки: ${res.status} ${res.statusText}`)
-  }
+  const res = await fetchWithTimeout(`${API_BASE_URL}/${id}`, { signal })
+  if (!res.ok) throw new Error(MESSAGES.LOAD_ERROR(res.status, res.statusText))
   return res.json()
 }
