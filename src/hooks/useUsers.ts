@@ -32,32 +32,16 @@ function getCacheKey(params: UseUsersParams): string {
 const cache = new Map<string, CacheEntry>()
 const CACHE_MAX_ENTRIES = 50
 
-const inFlight = new Map<string, Promise<CacheEntry>>()
+const inFlight = new Map<string, Promise<CacheEntry | void>>()
 
 function buildApiParams(params: UseUsersParams): Parameters<typeof fetchUsers>[0] {
-  const searchQuery = params.filters?.search?.trim()
-  const ageFilter = params.filters?.age?.trim()
-  const genderFilter = params.filters?.gender?.trim()
-  const phoneFilter = params.filters?.phone?.trim()
-
-  const apiParams: Parameters<typeof fetchUsers>[0] = {
+  return {
     page: params.page,
     limit: params.limit,
     sortBy: params.sortBy,
     order: params.order,
+    filters: params.filters ? { ...params.filters } : undefined,
   }
-
-  if (searchQuery) {
-    apiParams.filters = { search: searchQuery }
-  } else if (ageFilter) {
-    apiParams.filters = { age: ageFilter }
-  } else if (genderFilter) {
-    apiParams.filters = { gender: genderFilter }
-  } else if (phoneFilter) {
-    apiParams.filters = { search: phoneFilter }
-  }
-
-  return apiParams
 }
 
 export function useUsers(params: UseUsersParams) {
@@ -109,14 +93,15 @@ export function useUsers(params: UseUsersParams) {
     try {
       const entry = await promise
       if (abortRef.current?.signal.aborted) return
+      if (!entry) return
       setUsers(entry.users)
       setTotal(entry.total)
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
       setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке данных')
       if (!cache.has(cacheKey)) {
-        setUsers([])
-        setTotal(0)
+        setUsers((prev) => (prev.length ? prev : []))
+        setTotal((prev) => (prev > 0 ? prev : 0))
       }
     } finally {
       if (!abortRef.current?.signal.aborted) {
@@ -140,15 +125,17 @@ export function useUsers(params: UseUsersParams) {
     if (cache.has(nextKey) || inFlight.has(nextKey)) return
     const controller = new AbortController()
     const apiParams = { ...buildApiParams(nextParams), signal: controller.signal }
-    const promise = fetchUsers(apiParams).then((data) => {
-      const entry: CacheEntry = { users: data.users, total: data.total }
-      if (cache.size >= CACHE_MAX_ENTRIES) {
-        const firstKey = cache.keys().next().value
-        if (firstKey) cache.delete(firstKey)
-      }
-      cache.set(nextKey, entry)
-      return entry
-    })
+    const promise = fetchUsers(apiParams)
+      .then((data) => {
+        const entry: CacheEntry = { users: data.users, total: data.total }
+        if (cache.size >= CACHE_MAX_ENTRIES) {
+          const firstKey = cache.keys().next().value
+          if (firstKey) cache.delete(firstKey)
+        }
+        cache.set(nextKey, entry)
+        return entry
+      })
+      .catch(() => {})
     inFlight.set(nextKey, promise)
     promise.finally(() => inFlight.delete(nextKey))
     return () => controller.abort()
