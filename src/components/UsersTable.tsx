@@ -90,6 +90,7 @@ export function UsersTable({
             return (
               <th
                 key={col.key}
+                scope="col"
                 className={`users-table__th ${isSortable ? 'users-table__th--sortable' : ''} ${isActive ? 'users-table__th--active' : ''}`}
                 style={{
                   width: columnWidths[col.key] ?? DEFAULT_TABLE_COLUMN_WIDTH,

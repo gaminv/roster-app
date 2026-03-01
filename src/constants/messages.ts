@@ -5,10 +5,11 @@
 export const MESSAGES = {
   /** Timeout / slow API (banner + cache note) */
   TIMEOUT:
-    'Превышено время ожидания. Настоятельно рекомендуется включить VPN — обновление страницы не помогает. Данные из кэша сохранены.',
+    'Превышено время ожидания. Рекомендуется включить VPN. Данные из кэша сохранены.',
   /** Shown when loading takes longer than SLOW_HINT_DELAY_MS */
-  SLOW_HINT:
-    'Загрузка идёт дольше обычного. Настоятельно рекомендуется включить VPN — обновление страницы не помогает.',
+  SLOW_HINT: 'Загрузка идёт дольше обычного. Рекомендуется включить VPN.',
+  /** Refresh page button (keeps filters/column widths via sessionStorage) */
+  REFRESH_PAGE: 'Обновить страницу',
   /** Generic fetch error */
   LOAD_ERROR: (status: number, statusText: string) =>
     `Ошибка загрузки: ${status} ${statusText}`,

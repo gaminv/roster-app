@@ -12,8 +12,11 @@ export const MAX_USERS_FOR_CLIENT_FILTER = 200
 export const DEBOUNCE_MS = 400
 
 /** After this loading duration (ms), show "slow connection" hint */
-export const SLOW_HINT_DELAY_MS = 6000
+export const SLOW_HINT_DELAY_MS = 5000
 
 /** Age filter bounds (for input min/max and placeholder) */
 export const AGE_FILTER_MIN = 0
 export const AGE_FILTER_MAX = 120
+
+/** sessionStorage key for persisting filters, column widths, page, sort across refresh */
+export const ROSTER_STORAGE_KEY = 'roster-state'
