@@ -8,7 +8,7 @@
 
 ## Live demo
 
-[https://gaminv.github.io/roster/](https://gaminv.github.io/roster/)
+[https://gaminv.github.io/roster-app/](https://gaminv.github.io/roster-app/)
 
 ## О проекте
 
